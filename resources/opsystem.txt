@@ -1,0 +1,12 @@
+id	name
+1	FreeDOS
+2	Linux
+3	Microsoft Vista Business
+4	Microsoft Vista Home Basic HU
+5	Microsoft Vista Home Premium
+6	Microsoft Vista Home Premium HU
+7	Microsoft Vista Home Premium HU notebook
+8	Windows 7 Home Premium HU 32Bit
+9	Windows 7 Home Premium HU 64Bit
+10	Windows 7 Starter Edition HU
+11	Windows XP Home Magyar

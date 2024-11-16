@@ -1,0 +1,45 @@
+id	manufacturer	type
+1	AMD	Athlon 64 X2 QL64
+4	AMD	Athlon TM Neo MV-40
+5	AMD	Mobil Sempron SI-40
+6	AMD	Turion64 X2 TL60
+7	AMD	Turion64 X2 TL64
+8	AMD	Turion64 X2 TL62
+10	Intel	Celeron 900
+12	Intel	Celeron Dual-Core T1600
+13	Intel	Celeron Dual-Core T1700
+14	Intel	Celeron Dual-Core T3000
+17	Intel	Celeron M 560
+18	Intel	Centrino Atom 1600
+19	Intel	Centrino Atom N270
+20	Intel	Centrino Atom N280
+21	Intel	Centrino Atom Z520
+22	Intel	Centrino Atom Z530
+23	Intel	Core Duo T3400
+24	Intel	Core2 Duo P7350
+25	Intel	Core2 Duo P8400
+26	Intel	Core2 Duo P8600
+27	Intel	Core2 Duo P8700
+28	Intel	Core2 Duo SL9400
+29	Intel	Core2 Duo SU7300
+30	Intel	Core2 Duo SU9300
+31	Intel	Core2 Duo SU9400
+32	Intel	Core2 Duo T5670
+34	Intel	Core2 Duo T5870
+35	Intel	Core2 Duo T6400
+36	Intel	Core2 Duo T6500
+37	Intel	Core2 Duo T6570
+38	Intel	Core2 Duo T6600
+39	Intel	Core2 Duo T6670
+40	Intel	Core2 Duo T7300
+41	Intel	Core2 Duo T7500
+42	Intel	Core2 Duo T8300
+43	Intel	Core2 Duo T9300
+44	Intel	Core2 Duo T9400
+45	Intel	Core2 Solo SU3500 ULV
+46	Intel	Pentium Dual Core SU4100
+48	Intel	Pentium dual-core T4200
+49	Intel	Pentium dual-core T4300
+51	Intel	Celeron M ULV723
+52	VIA	Via Nano ULV 2250
+53	AMD	Athlon 64 X2 QL65
