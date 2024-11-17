@@ -10,6 +10,38 @@ use Illuminate\Support\Facades\DB;
 
 class NotebookController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index', 'show']);
+    }
+
+    public function create()
+    {
+        // Only users and admins can create
+        return view('notebooks.create');
+    }
+
+    public function store(Request $request)
+    {
+        $this->authorize('create', Notebook::class);
+
+        $validated = $request->validate([
+            'manufacturer' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            // Add other validation rules
+        ]);
+
+        $notebook = auth()->user()->notebooks()->create($validated);
+
+        return redirect()->route('notebooks.show', $notebook);
+    }
+
+    public function edit(Notebook $notebook)
+    {
+        $this->authorize('update', $notebook);
+        return view('notebooks.edit', compact('notebook'));
+    }
+
     public function index(Request $request)
     {
         // Basic filtering and pagination
