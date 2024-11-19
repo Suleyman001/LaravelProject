@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use App\Models\Processor;
 use App\Models\OperatingSystem;
 use App\Models\Notebook;
@@ -16,7 +18,7 @@ class DatabaseSeeder extends Seeder
         return preg_replace("/^$bom/", '', $text);
     }
 
-    private function importData($file, $model, $columns, $autoCreate = false) 
+    private function importData($file, $model, $columns, $autoCreate = false, $adminUser = null) 
     {
         $content = file_get_contents(storage_path('app/data/' . $file));
         $lines = explode("\n", $this->removeBOM($content));
@@ -95,6 +97,11 @@ class DatabaseSeeder extends Seeder
                             throw new \Exception("Operating System ID {$data['opsystemid']} not found");
                         }
                     }
+
+                    // Add admin user_id for notebooks
+                    if ($adminUser) {
+                        $data['user_id'] = $adminUser->id;
+                    }
                 }
 
                 $instance = $model::create($data);
@@ -141,6 +148,15 @@ class DatabaseSeeder extends Seeder
         Notebook::query()->delete();
         Processor::query()->delete();
         OperatingSystem::query()->delete();
+        User::query()->delete();
+
+        // Create an admin user if not exists
+        $adminUser = User::create([
+            'name' => 'System Admin',
+            'email' => 'admin@notebook.com',
+            'password' => Hash::make('password'), // Change this!
+            'role' => 'admin'
+        ]);
 
         // Import reference data first
         $references = [];
@@ -156,7 +172,7 @@ class DatabaseSeeder extends Seeder
             'name' => 1
         ]));
 
-        // Import notebooks with auto-creation of missing references enabled
+        // Import notebooks with auto-creation of missing references and admin user
         $this->importData('notebook.txt', Notebook::class, [
             'manufacturer' => 0,
             'type' => 1,
@@ -168,7 +184,7 @@ class DatabaseSeeder extends Seeder
             'processorid' => 7,
             'opsystemid' => 8,
             'pieces' => 9
-        ], true);
+        ], true, $adminUser);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }

@@ -8,6 +8,7 @@ use App\Models\OperatingSystem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+
 class NotebookController extends Controller
 {
     public function __construct()
@@ -16,32 +17,109 @@ class NotebookController extends Controller
     }
 
     public function create()
-    {
-        // Only users and admins can create
-        return view('notebooks.create');
-    }
+{
+    \Log::info('Create notebook attempt', [
+        'user' => auth()->user()->toArray(),
+        'timestamp' => now()
+    ]);
 
-    public function store(Request $request)
-    {
-        $this->authorize('create', Notebook::class);
+    try {
+        $processors = Processor::all();
+        $operatingSystems = OperatingSystem::all();
 
-        $validated = $request->validate([
-            'manufacturer' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            // Add other validation rules
+        if ($processors->isEmpty()) {
+            \Log::warning('No processors found in database');
+        }
+
+        if ($operatingSystems->isEmpty()) {
+            \Log::warning('No operating systems found in database');
+        }
+
+        return view('notebooks.create', compact('processors', 'operatingSystems'));
+    } catch (\Exception $e) {
+        \Log::error('Error in create method', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
 
-        $notebook = auth()->user()->notebooks()->create($validated);
-
-        return redirect()->route('notebooks.show', $notebook);
+        return redirect()->back()->with('error', 'Unable to load create form. Please try again.');
     }
+}
+public function store(Request $request)
+{
+    $this->authorize('create', Notebook::class);
 
-    public function edit(Notebook $notebook)
-    {
-        $this->authorize('update', $notebook);
-        return view('notebooks.edit', compact('notebook'));
-    }
+    $validated = $request->validate([
+        'manufacturer' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'display' => 'required|numeric|min:10|max:20',
+        'memory' => 'required|integer|min:2048|max:65536',
+        'harddisk' => 'required|integer|min:128|max:4096',
+        'videocontroller' => 'required|string|max:255',
+        'price' => 'required|numeric|min:0|max:1000000',
+        'processorid' => 'required|exists:processors,id',
+        'opsystemid' => 'required|exists:operating_systems,id',
+        'pieces' => 'required|integer|min:0|max:1000'
+    ]);
 
+    // For system-imported notebooks, set user to current admin or first admin
+    $adminUser = auth()->user();
+    $validated['user_id'] = $adminUser->id;
+
+    $notebook = Notebook::create($validated);
+
+    return redirect()->route('notebooks.show', $notebook)
+        ->with('success', 'Notebook created successfully');
+}
+
+public function edit(Notebook $notebook)
+{
+    \Log::info('Edit Notebook Attempt', [
+        'user_id' => auth()->id(),
+        'user_role' => auth()->user()->role,
+        'notebook_id' => $notebook->id,
+        'notebook_owner_id' => $notebook->user_id
+    ]);
+
+    $this->authorize('update', $notebook);
+
+    $processors = Processor::all();
+    $operatingSystems = OperatingSystem::all();
+
+    return view('notebooks.edit', compact('notebook', 'processors', 'operatingSystems'));
+}
+
+public function update(Request $request, Notebook $notebook)
+{
+    $this->authorize('update', $notebook);
+
+    $validated = $request->validate([
+        'manufacturer' => 'required|string|max:255',
+        'type' => 'required|string|max:255',
+        'display' => 'required|numeric',
+        'memory' => 'required|integer',
+        'harddisk' => 'required|integer',
+        'videocontroller' => 'required|string',
+        'price' => 'required|numeric',
+        'processorid' => 'required|exists:processors,id',
+        'opsystemid' => 'required|exists:operating_systems,id',
+        'pieces' => 'required|integer'
+    ]);
+
+    $notebook->update($validated);
+
+    return redirect()->route('notebooks.show', $notebook)
+        ->with('success', 'Notebook updated successfully');
+}
+public function destroy(Notebook $notebook)
+{
+    $this->authorize('delete', $notebook);
+
+    $notebook->delete();
+
+    return redirect()->route('notebooks.index')
+        ->with('success', 'Notebook deleted successfully');
+}
     public function index(Request $request)
     {
         // Basic filtering and pagination
@@ -69,28 +147,39 @@ class NotebookController extends Controller
         return view('notebooks.index', compact('notebooks'));
     }
 
-    public function show($id)
-    {
-        $notebook = Notebook::with(['processor', 'operatingSystem'])->findOrFail($id);
-        return view('notebooks.show', compact('notebook'));
-    }
+    // app/Http/Controllers/NotebookController.php
+public function show($id)
+{
+    $notebook = Notebook::with(['processor', 'operatingSystem', 'user'])->findOrFail($id);
+    return view('notebooks.show', compact('notebook'));
+}
 
     // Advanced statistics method
     public function statistics()
-    {
-        $stats = [
-            'total_notebooks' => Notebook::count(),
-            'total_manufacturers' => Notebook::distinct('manufacturer')->count(),
-            'average_price' => Notebook::avg('price'),
-            'most_common_processor' => Notebook::groupBy('processorid')
-                ->select('processorid', DB::raw('count(*) as count'))
-                ->orderBy('count', 'desc')
-                ->first()
-        ];
+{
+    // Manufacturer Distribution
+    $manufacturerStats = Notebook::groupBy('manufacturer')
+        ->select('manufacturer', DB::raw('count(*) as count'))
+        ->get();
 
-        return view('notebooks.statistics', compact('stats'));
-    }
+    // Processor Price Analysis
+    $processorPriceStats = Notebook::join('processors', 'notebooks.processorid', '=', 'processors.id')
+        ->groupBy('processors.type')
+        ->select('processors.type', DB::raw('avg(notebooks.price) as avg_price'))
+        ->get();
 
+    // Operating System Distribution
+    $osStats = Notebook::join('operating_systems', 'notebooks.opsystemid', '=', 'operating_systems.id')
+        ->groupBy('operating_systems.name')
+        ->select('operating_systems.name', DB::raw('count(*) as count'))
+        ->get();
+
+    return view('notebooks.statistics', [
+        'manufacturerStats' => $manufacturerStats,
+        'processorPriceStats' => $processorPriceStats,
+        'osStats' => $osStats
+    ]);
+}
     // Verification method for Operating Systems
     public function verifyOperatingSystems()
     {
@@ -131,5 +220,71 @@ class NotebookController extends Controller
     private function removeBOM($text) {
         $bom = pack('H*', 'EFBBBF');
         return preg_replace("/^$bom/", '', $text);
+    }
+    public function advancedSearch(Request $request)
+    {
+        $query = Notebook::query();
+    
+        // Prepare filter options
+        $filterOptions = [
+            'manufacturers' => Notebook::distinct('manufacturer')->pluck('manufacturer'),
+            'processors' => Processor::distinct('type')->pluck('type'),
+            'operating_systems' => OperatingSystem::pluck('name'),
+            'memory_options' => [2048, 4096, 8192, 16384],
+            'harddisk_options' => [128, 256, 512, 1024],
+            'price_ranges' => [
+                ['min' => 0, 'max' => 50000, 'label' => 'Under 50,000'],
+                ['min' => 50000, 'max' => 100000, 'label' => '50,000 - 100,000'],
+                ['min' => 100000, 'max' => PHP_INT_MAX, 'label' => 'Over 100,000']
+            ]
+        ];
+    
+        // Manufacturer filter
+        if ($request->filled('manufacturer')) {
+            $query->where('manufacturer', $request->manufacturer);
+        }
+    
+        // Processor filter
+        if ($request->filled('processor')) {
+            $query->whereHas('processor', function($q) use ($request) {
+                $q->where('type', $request->processor);
+            });
+        }
+    
+        // Operating System filter
+        if ($request->filled('operating_system')) {
+            $query->whereHas('operatingSystem', function($q) use ($request) {
+                $q->where('name', $request->operating_system);
+            });
+        }
+    
+        // Memory filter
+        if ($request->filled('memory')) {
+            $query->where('memory', '>=', $request->memory);
+        }
+    
+        // Hard Disk filter
+        if ($request->filled('harddisk')) {
+            $query->where('harddisk', '>=', $request->harddisk);
+        }
+    
+        // Price filter
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+    
+        // Sorting
+        $sortBy = $request->input('sort_by', 'price');
+        $sortDirection = $request->input('sort_direction', 'asc');
+        $query->orderBy($sortBy, $sortDirection);
+    
+        // Eager load relationships and paginate
+        $notebooks = $query->with(['processor', 'operatingSystem'])
+            ->paginate(20);
+    
+        return view('notebooks.advanced-search', [
+            'notebooks' => $notebooks,
+            'filterOptions' => $filterOptions
+        ]);
     }
 }
