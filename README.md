@@ -9,8 +9,19 @@ php artisan serve
 ```bash
 npm run dev
 ```
+## Diagnostic Commands:
+```bash
+# Clear all caches
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
 
+# Regenerate key
+php artisan key:generate
 
+# Optimize
+php artisan optimize
+```
 ## 1. Spectacular Responsive Website 🌐  
 - **Dynamic Layout Design Principles**
   - Responsive grid system
