@@ -1,4 +1,15 @@
 # 🚀 Laravel Notebook Store Project Requirements Breakdown
+## Required steps in start to test this app
+```bash 
+cd C:\xampp\htdocs\Notebook\LaravelProject\laravel
+```
+```bash
+php artisan serve
+```
+```bash
+npm run dev
+```
+
 
 ## 1. Spectacular Responsive Website 🌐  
 - **Dynamic Layout Design Principles**
@@ -301,13 +312,43 @@ php artisan --version
             view:clear            Clear all compiled view files
 
 ```bash
- php artisan serve
-        http://127.0.0.1:8000
-        [Sat Nov 16 20:51:37 2024] PHP 8.1.29 Development Server (http://127.0.0.1:8000) started
-        [Sat Nov 16 20:51:40 2024] 127.0.0.1:65423 Accepted
-        [Sat Nov 16 20:51:43 2024] 127.0.0.1:65423 Closing
-        [Sat Nov 16 20:51:43 2024] 127.0.0.1:65424 Accepted
-        [Sat Nov 16 20:51:44 2024] 127.0.0.1:65424 [200]: GET /favicon.ico
-        [Sat Nov 16 20:51:44 2024] 127.0.0.1:65424 Closing
-
+composer require laravel/ui
+php artisan ui bootstrap --auth
+npm install
+npm run dev
 ```
+
+## Download and Install Node.js:
+- Go to https://nodejs.org/
+- Download the LTS (Long Term Support) version
+- Run the installer
+- Restart your terminal/command prompt after installatio
+## Verify the installation:
+  ```bash copy
+  node --version
+  npm --version
+  ```
+## After Node.js is installed, go back to your Laravel project directory and run:
+``` bash
+npm install
+npm run dev
+```
+
+## some useful informations 
+- Open PowerShell as Administrator
+- Run this command to check current execution policy:
+  ``` bash
+  Get-ExecutionPolicy
+  ```
+- If it's "Restricted", change it to "RemoteSigned":
+  ```bash
+  Set-ExecutionPolicy RemoteSigned
+  ```
+- When prompted, type "Y" to confirm
+  - or just use other command tools which is better
+  
+    ```bash
+    php artisan migrate:fresh
+    php artisan db:seed
+    ```
+    
