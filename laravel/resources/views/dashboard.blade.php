@@ -1,96 +1,385 @@
 @extends('layouts.app')
-
 @section('content')
-<div class="container">
-    <h1>Notebook Dashboard</h1>
-
+<div class="container-fluid">
     <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">Total Counts</div>
-                <div class="card-body">
-                    <p>Notebooks: {{ $stats['total_notebooks'] }}</p>
-                    <p>Processors: {{ $stats['total_processors'] }}</p>
-                    <p>Operating Systems: {{ $stats['total_operating_systems'] }}</p>
+        <!-- Welcome Section -->
+        <div class="col-12 bg-primary text-white py-4 mb-4">
+            <div class="container">
+                <h1 class="display-4">Welcome, {{ $user->name }}!</h1>
+                <p class="lead">
+                    {{ $user->isAdmin() ? 'Administrator' : 'User' }} Dashboard
+                </p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Notebooks</h5>
+                                <p class="display-4">{{ $stats['total_notebooks'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Your Notebooks</h5>
+                                <p class="display-4">{{ $stats['user_notebooks_count'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Manufacturers</h5>
+                                <p class="display-4">{{ $stats['total_manufacturers'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Avg Notebook Price</h5>
+                                <p class="display-4">${{ number_format($stats['average_notebook_price'], 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">Top Manufacturers</div>
-                <div class="card-body">
-                    <ul>
-                        @foreach($stats['manufacturers'] as $manufacturer)
-                            <li>{{ $manufacturer->manufacturer }}: {{ $manufacturer->count }}</li>
-                        @endforeach
-                    </ul>
+        <!-- Quick Actions -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Quick Actions</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('notebooks.create') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus"></i> Add New Notebook
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('notebooks.index') }}" class="btn btn-secondary w-100">
+                                    <i class="fas fa-list"></i> View All Notebooks
+                                </a>
+                            </div>
+                            @if($user->isAdmin())
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('admin.users') }}" class="btn btn-warning w-100">
+                                    <i class="fas fa-users"></i> User Management
+                                </a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">Price Distribution</div>
-                <div class="card-body">
-                    <p>Budget (< 50,000): {{ $stats['price_distribution']['budget'] }}</p>
-                    <p>Mid-Range (50,000 - 150,000): {{ $stats['price_distribution']['mid_range'] }}</p>
-                    <p>High-End (> 150,000): {{ $stats['price_distribution']['high_end'] }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Top Processors</div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Manufacturer</th>
-                                <th>Type</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($stats['top_processors'] as $processor)
-                                <tr>
-                                    <td>{{ $processor->manufacturer }}</td>
-                                    <td>{{ $processor->type }}</td>
-                                    <td>{{ $processor->count }}</td>
-                                </tr>
+        <!-- Recent Notebooks -->
+        <div class="col-md-6 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Recent Notebooks</div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach($recentNotebooks as $notebook)
+                                <a href="{{ route('notebooks.show', $notebook) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ $notebook->manufacturer }} {{ $notebook->type }}</h5>
+                                        <small>{{ $notebook->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        Price: ${{ number_format($notebook->price, 2) }} 
+                                        | Processor: {{ $notebook->processor->type }}
+                                    </p>
+                                </a>
                             @endforeach
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Operating System Distribution</div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Operating System</th>
-                                <th>Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($stats['operating_system_distribution'] as $os)
-                                <tr>
-                                    <td>{{ $os->name }}</td>
-                                    <td>{{ $os->count }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+        <!-- Your Notebooks -->
+        <div class="col-md-6 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Your Notebooks</div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @forelse($userNotebooks as $notebook)
+                                <a href="{{ route('notebooks.show', $notebook) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ $notebook->manufacturer }} {{ $notebook->type }}</h5>
+                                        <small>{{ $notebook->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        Price: ${{ number_format($notebook->price, 2) }}
+                                    </p>
+                                </a>
+                            @empty
+                                <p class="text-center text-muted">No notebooks yet</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Top Manufacturers</div>
+                    <div class="card-body">
+                        <canvas id="manufacturerChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('manufacturerChart'), {
+        type: 'bar',
+        data: {
+            labels: {!! $topManufacturers->pluck('manufacturer')->toJson() !!},
+            datasets: [{
+                label: 'Notebooks by Manufacturer',
+                data: {!! $topManufacturers->pluck('count')->toJson() !!},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+.bg-primary {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important;
+}
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+@endpush
+
+
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <!-- Welcome Section -->
+        <div class="col-12 bg-primary text-white py-4 mb-4">
+            <div class="container">
+                <h1 class="display-4">Welcome, {{ $user->name }}!</h1>
+                <p class="lead">
+                    {{ $user->isAdmin() ? 'Administrator' : 'User' }} Dashboard
+                </p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Notebooks</h5>
+                                <p class="display-4">{{ $stats['total_notebooks'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Your Notebooks</h5>
+                                <p class="display-4">{{ $stats['user_notebooks_count'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Manufacturers</h5>
+                                <p class="display-4">{{ $stats['total_manufacturers'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Avg Notebook Price</h5>
+                                <p class="display-4">${{ number_format($stats['average_notebook_price'], 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Quick Actions</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('notebooks.create') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus"></i> Add New Notebook
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('notebooks.index') }}" class="btn btn-secondary w-100">
+                                    <i class="fas fa-list"></i> View All Notebooks
+                                </a>
+                            </div>
+                            @if($user->isAdmin())
+                            <div class="col-md-4 mb-2">
+                                <a href="{{ route('admin.users') }}" class="btn btn-warning w-100">
+                                    <i class="fas fa-users"></i> User Management
+                                </a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notebooks -->
+        <div class="col-md-6 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Recent Notebooks</div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @foreach($recentNotebooks as $notebook)
+                                <a href="{{ route('notebooks.show', $notebook) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ $notebook->manufacturer }} {{ $notebook->type }}</h5>
+                                        <small>{{ $notebook->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        Price: ${{ number_format($notebook->price, 2) }} 
+                                        | Processor: {{ $notebook->processor->type }}
+                                    </p>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Your Notebooks -->
+        <div class="col-md-6 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Your Notebooks</div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            @forelse($userNotebooks as $notebook)
+                                <a href="{{ route('notebooks.show', $notebook) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ $notebook->manufacturer }} {{ $notebook->type }}</h5>
+                                        <small>{{ $notebook->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        Price: ${{ number_format($notebook->price, 2) }}
+                                    </p>
+                                </a>
+                            @empty
+                                <p class="text-center text-muted">No notebooks yet</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="col-12 mb-4">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">Top Manufacturers</div>
+                    <div class="card-body">
+                        <canvas id="manufacturerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('manufacturerChart'), {
+        type: 'bar',
+        data: {
+            labels: {!! $topManufacturers->pluck('manufacturer')->toJson() !!},
+            datasets: [{
+                label: 'Notebooks by Manufacturer',
+                data: {!! $topManufacturers->pluck('count')->toJson() !!},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+@endpush
+
+@push('styles')
+<style>
+.bg-primary {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important;
+}
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
+@endpush
