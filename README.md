@@ -1,4 +1,7 @@
 # 🚀 Laravel Notebook Store Project Requirements Breakdown
+
+### 💻[Live Demo](https://njelaravelproject-hfe8axdzdffubcdc.francecentral-01.azurewebsites.net/)
+
 ## Required steps in start to test this app
 ```bash 
 cd C:\xampp\htdocs\Notebook\LaravelProject\laravel
